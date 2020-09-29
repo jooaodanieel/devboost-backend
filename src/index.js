@@ -24,6 +24,21 @@ app.get('/opportunities', (_req, res) => {
   })
 })
 
+app.post('/opportunities', (_req, res) =>{
+  console.log(_req.body)
+  let id = allOpportunities.length + 1
+  let opportunity = {
+    id,
+    title: _req.body.title,
+    author: _req.body.author,
+    description: _req.body.description
+  }
+  
+  res.json({
+    opportunity  
+  })
+})
+
 app.listen(3000, () => {
   console.log('server running')
 })

@@ -1,5 +1,6 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+const { response } = require('express')
 
 const app = express()
 
@@ -25,20 +26,31 @@ app.get('/opportunities', (_req, res) => {
 })
 
 app.post('/opportunities', (_req, res) =>{
-  console.log(_req.body)
+  const { body } = _req
+  if (!checkFields(body)) {
+    res.status(404).send('<h1>Parametros vazios ou não string</h1>')
+    return
+  }
   let id = allOpportunities.length + 1
   let opportunity = {
     id,
-    title: _req.body.title,
-    author: _req.body.author,
-    description: _req.body.description
+    ...body
   }
-  
+  allOpportunities.push(opportunity);
+
   res.json({
-    opportunity  
+    opportunity
   })
 })
 
 app.listen(3000, () => {
   console.log('server running')
 })
+
+
+function checkFields (body) {
+  if (body.author === "" || body.title === "" || body.description === "") {
+    return false
+  }
+  return true
+}

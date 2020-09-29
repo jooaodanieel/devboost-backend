@@ -40,6 +40,7 @@ const allOpportunities = [
       'Estágio 20h/semana, benefícios VR+Odonto, bolsa-auxílio compatível com mercado',
   },
 ]
+
 app.get('/opportunities', (_req, res) => {
   res.json({
     opportunities: allOpportunities,

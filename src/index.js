@@ -4,6 +4,9 @@ const bodyParser = require('body-parser')
 const app = express()
 
 app.use(bodyParser())
+
+let id = 1;
+
 const allOpportunities = [
   {
     id: 1,
@@ -23,6 +26,37 @@ app.get('/opportunities', (_req, res) => {
     opportunities: allOpportunities
   })
 })
+
+app.post('/opportunities', (req, res) => {
+    const { title, author, description } = req.body;
+
+    if (title === undefined || title.trim() === "") {
+        res.status(400).send("error: empty title");
+        return;
+    }
+
+    if (author === undefined || author.trim() === "") {
+        res.status(400).send("error: empty author");
+        return;
+    }
+
+    if (description === undefined || description.trim() === "") {
+        res.status(400).send("error: empty description");
+        return;
+    }
+
+    const opportunity = {
+        id,
+        title,
+        author,
+        description
+    }
+
+    id++;
+
+    console.log(opportunity);
+    res.send(opportunity);
+});
 
 app.listen(3000, () => {
   console.log('server running')

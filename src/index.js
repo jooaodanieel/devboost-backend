@@ -45,12 +45,18 @@ app.get('/opportunities', (_req, res) => {
   const queryLength = Object.keys(_req.query).length
 
   const filtered = queryLength
-    ? allOpportunities.filter((opportunity) =>
-        opportunity.title
-          .toLowerCase()
-          .includes(_req.query.searchTitle.toLowerCase())
-      )
+    ? allOpportunities.filter((opportunity) => {
+        Object.keys(_req.query).forEach((key) => {
+          console.log(_req.query[key])
+          if(opportunity[key].toLowerCase().includes(_req.query[key].toLowerCase())) {
+            return true
+          }
+        })
+      }
+    )
     : allOpportunities
+
+
 
   res.json({
     opportunities: filtered,

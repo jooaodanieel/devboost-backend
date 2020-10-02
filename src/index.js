@@ -42,8 +42,18 @@ const allOpportunities = [
 ]
 
 app.get('/opportunities', (_req, res) => {
+  const queryLength = Object.keys(_req.query).length
+
+  const filtered = queryLength
+    ? allOpportunities.filter((opportunity) =>
+        opportunity.title
+          .toLowerCase()
+          .includes(_req.query.searchTitle.toLowerCase())
+      )
+    : allOpportunities
+
   res.json({
-    opportunities: allOpportunities,
+    opportunities: filtered,
   })
 })
 

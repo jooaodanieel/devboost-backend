@@ -45,18 +45,16 @@ app.get('/opportunities', (_req, res) => {
   const queryLength = Object.keys(_req.query).length
 
   const filtered = queryLength
-    ? allOpportunities.filter((opportunity) => {
-        Object.keys(_req.query).forEach((key) => {
-          console.log(_req.query[key])
-          if(opportunity[key].toLowerCase().includes(_req.query[key].toLowerCase())) {
-            return true
-          }
-        })
-      }
-    )
+    ? allOpportunities.reduce((vector , opportunity) => {
+      Object.keys(_req.query).forEach((key) => {
+        console.log(_req.query[key])
+        if(opportunity[key].toLowerCase().includes(_req.query[key].toLowerCase())) {
+          vector.push(opportunity)
+        }
+      })
+      return vector
+    },[])
     : allOpportunities
-
-
 
   res.json({
     opportunities: filtered,
@@ -83,6 +81,7 @@ app.post('/opportunities', (req, res) => {
   console.log(opportunity)
   res.json(opportunity)
 })
+
 
 app.listen(3000, () => {
   console.log('server running')

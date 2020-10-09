@@ -5,7 +5,7 @@ const app = express()
 
 app.use(bodyParser())
 
-function validate(title, author, description) {
+function validate(title, author, description, summary) {
   const errors = []
   if (title === undefined || title.trim() === '') {
     errors.push('Empty title')
@@ -18,6 +18,11 @@ function validate(title, author, description) {
   if (description === undefined || description.trim() === '') {
     errors.push('Empty description')
   }
+
+  if (summary === undefined || summary.trim() === '') {
+    errors.push('Empty summary')
+  }
+
   return {
     isValid: errors.length === 0,
     errors,
@@ -29,6 +34,7 @@ const allOpportunities = [
     id: 1,
     title: 'IC em Desenvolvimento de Sistemas',
     author: 'João Daniel',
+    summary: '',
     description:
       'Desenvolvimento de um sistema na arquitetura de microsserviços para estudar os desdobramentos relativos dos padrões',
   },
@@ -36,6 +42,7 @@ const allOpportunities = [
     id: 2,
     title: 'Estágio de desenvolvimento em BluBank',
     author: 'BluBank',
+    summary: '',
     description:
       'Estágio 20h/semana, benefícios VR+Odonto, bolsa-auxílio compatível com mercado',
   },
@@ -64,8 +71,8 @@ app.get('/opportunities', (_req, res) => {
 })
 
 app.post('/opportunities', (req, res) => {
-  const { title, author, description } = req.body
-  const { isValid, errors } = validate(title, author, description)
+  const { title, author, description, summary } = req.body
+  const { isValid, errors } = validate(title, author, description, summary)
 
   if (!isValid) {
     res.status(400).json(errors)
@@ -77,6 +84,7 @@ app.post('/opportunities', (req, res) => {
     title,
     author,
     description,
+    summary
   }
 
   allOpportunities.push(opportunity)

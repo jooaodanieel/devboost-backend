@@ -1,9 +1,11 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+const cors = require('cors');
 
 const app = express()
 
 app.use(bodyParser())
+app.use(cors())
 
 function validate(title, author, description) {
   const errors = []
@@ -84,5 +86,5 @@ app.post('/opportunities', (req, res) => {
 
 
 app.listen(3000, () => {
-  console.log('server running')
+  console.log('running')
 })

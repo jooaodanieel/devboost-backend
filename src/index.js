@@ -1,6 +1,6 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const cors = require('cors');
+const cors = require('cors')
 
 const app = express()
 
@@ -44,18 +44,37 @@ const allOpportunities = [
 ]
 
 app.get('/opportunities', (_req, res) => {
-  const queryLength = Object.keys(_req.query).length
-
-  const filtered = queryLength
-    ? allOpportunities.reduce((vector , opportunity) => {
-      Object.keys(_req.query).forEach((key) => {
-        console.log(_req.query[key])
-        if(opportunity[key].toLowerCase().includes(_req.query[key].toLowerCase())) {
-          vector.push(opportunity)
-        }
+  const { title, author, description } = _req.query
+  const hasQueries = !(
+    title == undefined &&
+    author == undefined &&
+    description == undefined
+  )
+  console.log(hasQueries)
+  const filtered = hasQueries
+    ? allOpportunities.filter((opportunity) => {
+        if (
+          title != undefined &&
+          title.trim() != '' &&
+          opportunity.title.toLowerCase().includes(title.toLowerCase())
+        )
+          return true
+        if (
+          author != undefined &&
+          author.trim() != '' &&
+          opportunity.author.toLowerCase().includes(author.toLowerCase())
+        )
+          return true
+        if (
+          description != undefined &&
+          description.trim() != '' &&
+          opportunity.description
+            .toLowerCase()
+            .includes(description.toLowerCase())
+        )
+          return true
+        return false
       })
-      return vector
-    },[])
     : allOpportunities
 
   res.json({
@@ -83,7 +102,6 @@ app.post('/opportunities', (req, res) => {
   console.log(opportunity)
   res.json(opportunity)
 })
-
 
 app.listen(3000, () => {
   console.log('running')

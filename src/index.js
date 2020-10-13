@@ -5,22 +5,33 @@ const app = express()
 
 app.use(bodyParser())
 
-function validate(title, author, description, summary) {
+function validate(title, author, description, summary, tags) {
   const errors = []
   if (title === undefined || title.trim() === '') {
-    errors.push('Empty title')
+    errors.push('Empty title');
   }
 
   if (author === undefined || author.trim() === '') {
-    errors.push('Empty author')
+    errors.push('Empty author');
   }
 
   if (description === undefined || description.trim() === '') {
-    errors.push('Empty description')
+    errors.push('Empty description');
   }
 
   if (summary === undefined || summary.trim() === '') {
-    errors.push('Empty summary')
+    errors.push('Empty summary');
+  }
+
+  if (!Array.isArray(tags)){
+    errors.push("Tags must be an array");
+  }
+  else{
+    const isString = tags.every((el) => {
+      return typeof(el) === "string";
+    })
+    if (!isString)
+      errors.push("All tags must be strings");
   }
 
   return {
@@ -37,7 +48,8 @@ const allOpportunities = [
     summary: '',
     description:
       'Desenvolvimento de um sistema na arquitetura de microsserviços para estudar os desdobramentos relativos dos padrões',
-  },
+    tags: ["Iniciação Científica", "Bolsa", "FAPESP", "Sistemas"],
+    },
   {
     id: 2,
     title: 'Estágio de desenvolvimento em BluBank',
@@ -45,6 +57,7 @@ const allOpportunities = [
     summary: '',
     description:
       'Estágio 20h/semana, benefícios VR+Odonto, bolsa-auxílio compatível com mercado',
+    tags: ["Estágio", "Sistemas"],
   },
 ]
 
@@ -71,8 +84,8 @@ app.get('/opportunities', (_req, res) => {
 })
 
 app.post('/opportunities', (req, res) => {
-  const { title, author, description, summary } = req.body
-  const { isValid, errors } = validate(title, author, description, summary)
+  const { title, author, description, summary, tags } = req.body
+  const { isValid, errors } = validate(title, author, description, summary, tags)
 
   if (!isValid) {
     res.status(400).json(errors)
@@ -84,7 +97,8 @@ app.post('/opportunities', (req, res) => {
     title,
     author,
     description,
-    summary
+    summary,
+    tags
   }
 
   allOpportunities.push(opportunity)

@@ -18,6 +18,19 @@ function validate(title, author, description) {
   if (description === undefined || description.trim() === '') {
     errors.push('Empty description')
   }
+
+  if (summary === undefined || summary.trim() === '') {
+    errors.push('Empty summary')
+  }
+
+  if (!Array.isArray(tags)) {
+    errors.push('Tags must be an array')
+  } else {
+    const isString = tags.every((el) => {
+      return typeof el === 'string'
+    })
+    if (!isString) errors.push('All tags must be strings')
+  }
   return {
     isValid: errors.length === 0,
     errors,
@@ -31,6 +44,7 @@ const allOpportunities = [
     author: 'João Daniel',
     description:
       'Desenvolvimento de um sistema na arquitetura de microsserviços para estudar os desdobramentos relativos dos padrões',
+    tags: ['Iniciação Científica', 'Bolsa', 'FAPESP', 'Sistemas'],
   },
   {
     id: 2,
@@ -38,25 +52,35 @@ const allOpportunities = [
     author: 'BluBank',
     description:
       'Estágio 20h/semana, benefícios VR+Odonto, bolsa-auxílio compatível com mercado',
+
+    tags: ['Estágio', 'Sistemas'],
   },
 ]
 
 app.get('/opportunities', (_req, res) => {
-  const queryLength = Object.keys(_req.query).length
+  const { title, author, description } = _req.query
+  const queryTitleValid = title != undefined && title.trim() != ''
+  const queryAuthorValid = author != undefined && author.trim() != ''
+  const queryDescriptionValid =
+    description != undefined && description.trim() != ''
 
-  const filtered = queryLength
+  const hasQueries =
+    queryAuthorValid || queryDescriptionValid || queryTitleValid
+
+  const filtered = hasQueries
     ? allOpportunities.filter((opportunity) => {
-        Object.keys(_req.query).forEach((key) => {
-          console.log(_req.query[key])
-          if(opportunity[key].toLowerCase().includes(_req.query[key].toLowerCase())) {
-            return true
-          }
-        })
-      }
-    )
+        return (
+          (queryTitleValid &&
+            opportunity.title.toLowerCase().includes(title.toLowerCase())) ||
+          (queryAuthorValid &&
+            opportunity.author.toLowerCase().includes(author.toLowerCase())) ||
+          (queryDescriptionValid &&
+            opportunity.description
+              .toLowerCase()
+              .includes(description.toLowerCase()))
+        )
+      })
     : allOpportunities
-
-
 
   res.json({
     opportunities: filtered,
@@ -64,8 +88,14 @@ app.get('/opportunities', (_req, res) => {
 })
 
 app.post('/opportunities', (req, res) => {
-  const { title, author, description } = req.body
-  const { isValid, errors } = validate(title, author, description)
+  const { title, author, description, summary, tags } = req.body
+  const { isValid, errors } = validate(
+    title,
+    author,
+    description,
+    summary,
+    tags
+  )
 
   if (!isValid) {
     res.status(400).json(errors)
@@ -77,6 +107,9 @@ app.post('/opportunities', (req, res) => {
     title,
     author,
     description,
+
+    summary,
+    tags,
   }
 
   allOpportunities.push(opportunity)

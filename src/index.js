@@ -63,6 +63,21 @@ const allOpportunities = [
   },
 ]
 
+app.get('/opportunities/tags', (_req, res) => {
+  const tags = allOpportunities.reduce((acc, opp) => {
+    opp.tags.forEach((tag) => {
+      if (!acc[tag]) {
+        acc[tag] = tag;
+      }
+    })
+    return acc;
+  }, {})
+
+  res.json({
+    tags: Object.keys(tags)
+  })
+})
+
 app.get('/opportunities', (_req, res) => {
   const { title, author, description } = _req.query
   const queryTitleValid = title != undefined && title.trim() != ''

@@ -65,35 +65,26 @@ const allOpportunities = [
 
 app.get('/opportunities', (_req, res) => {
   const { title, author, description } = _req.query
-  const hasQueries = !(
-    title == undefined &&
-    author == undefined &&
-    description == undefined
-  )
-  console.log(hasQueries)
+  const queryTitleValid = title != undefined && title.trim() != ''
+  const queryAuthorValid = author != undefined && author.trim() != ''
+  const queryDescriptionValid =
+    description != undefined && description.trim() != ''
+
+  const hasQueries =
+    queryAuthorValid || queryDescriptionValid || queryTitleValid
+
   const filtered = hasQueries
     ? allOpportunities.filter((opportunity) => {
-        if (
-          title != undefined &&
-          title.trim() != '' &&
-          opportunity.title.toLowerCase().includes(title.toLowerCase())
+        return (
+          (queryTitleValid &&
+            opportunity.title.toLowerCase().includes(title.toLowerCase())) ||
+          (queryAuthorValid &&
+            opportunity.author.toLowerCase().includes(author.toLowerCase())) ||
+          (queryDescriptionValid &&
+            opportunity.description
+              .toLowerCase()
+              .includes(description.toLowerCase()))
         )
-          return true
-        if (
-          author != undefined &&
-          author.trim() != '' &&
-          opportunity.author.toLowerCase().includes(author.toLowerCase())
-        )
-          return true
-        if (
-          description != undefined &&
-          description.trim() != '' &&
-          opportunity.description
-            .toLowerCase()
-            .includes(description.toLowerCase())
-        )
-          return true
-        return false
       })
     : allOpportunities
 

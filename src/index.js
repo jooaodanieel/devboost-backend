@@ -113,7 +113,8 @@ app.post('/opportunities', (req, res) => {
   const { isValid, errors } = validate(title, author, description, summary, tags)
 
   if (!isValid) {
-    res.status(400).json(errors)
+    console.log(errors);
+    res.json({ status: 400, message: errors });
     return
   }
 
@@ -128,7 +129,7 @@ app.post('/opportunities', (req, res) => {
 
   allOpportunities.push(opportunity)
   console.log(opportunity)
-  res.json(opportunity)
+  res.json({ status: 200, opportunity })
 })
 
 app.listen(3000, () => {

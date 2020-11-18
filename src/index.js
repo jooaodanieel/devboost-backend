@@ -1,8 +1,12 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
+const multer = require('multer')
+const uploadConfig = require('./config/upload');
 
 const app = express()
+
+const upload = multer(uploadConfig);
 
 app.use(bodyParser())
 app.use(cors())
@@ -108,8 +112,9 @@ app.get('/opportunities', (_req, res) => {
   })
 })
 
-app.post('/opportunities', (req, res) => {
+app.post('/opportunities', upload.single('image') , (req, res) => {
   const { title, author, description, summary, tags } = req.body
+  const image = req.file;
   const { isValid, errors } = validate(title, author, description, summary, tags)
 
   if (!isValid) {
@@ -124,7 +129,8 @@ app.post('/opportunities', (req, res) => {
     author,
     description,
     summary,
-    tags
+    tags,
+    image: image.filename
   }
 
   allOpportunities.push(opportunity)

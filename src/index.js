@@ -7,41 +7,6 @@ const { Opportunity } = require('./db');
 app.use(bodyParser())
 app.use(cors())
 
-function validate(title, author, description, summary, tags) {
-  const errors = []
-  if (title === undefined || title.trim() === '') {
-    errors.push('Empty title');
-  }
-
-  if (author === undefined || author.trim() === '') {
-    errors.push('Empty author');
-  }
-
-  if (description === undefined || description.trim() === '') {
-    errors.push('Empty description');
-  }
-
-  if (summary === undefined || summary.trim() === '') {
-    errors.push('Empty summary');
-  }
-
-  if (!Array.isArray(tags)){
-    errors.push("Tags must be an array");
-  }
-  else{
-    const isString = tags.every((el) => {
-      return typeof(el) === "string";
-    })
-    if (!isString)
-      errors.push("All tags must be strings");
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-  }
-}
-
 app.get('/opportunities/tags', async (_req, res) => {
   const tags = await Opportunity.find({})
   tags.reduce((acc, opp) => {
@@ -91,14 +56,6 @@ app.get('/opportunities', async (_req, res) => {
 
 app.post('/opportunities', (req, res) => {
   const { title, author, description, summary, tags } = req.body
-  const { isValid, errors } = validate(title, author, description, summary, tags)
-
-  if (!isValid) {
-    console.log(errors);
-    res.json({ status: 400, message: errors });
-    return
-  }
-
   const opportunity = {
     title,
     author,
@@ -106,10 +63,14 @@ app.post('/opportunities', (req, res) => {
     summary,
     tags
   }
-
-  Opportunity.create(opportunity);
-  console.log(opportunity);
-  res.json({ status: 200, opportunity })
+  const newOpportunity = new Opportunity(opportunity);
+  newOpportunity.save().then((opportunity) => {
+    console.log(opportunity);
+    res.json({ status: 200, opportunity })
+  })
+  .catch((err) => {
+    res.json({ status: 400, message: err });
+  });
 })
 
 app.listen(3000, () => {

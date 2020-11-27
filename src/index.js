@@ -1,11 +1,23 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
+const mongoose = require('mongoose')
 
 const app = express()
 
 app.use(bodyParser())
 app.use(cors())
+
+require('dotenv').config()
+const dbPassword = process.env.DB_PASSWORD
+
+mongoose.connect(`mongodb+srv://devboost:${dbPassword}@cluster0.6czdd.mongodb.net/Devboost?retryWrites=true&w=majority`, {useNewUrlParser: true})
+
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function() {
+  console.log("Conectou")
+});
 
 function validate(title, author, description, summary, tags) {
   const errors = []

@@ -1,4 +1,6 @@
-const kittySchema = new mongoose.Schema({
+const mongoose = require('mongoose');
+
+module.exports = new mongoose.Schema({
     title: String,
     author: String,
     summary: String,

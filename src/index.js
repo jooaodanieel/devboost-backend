@@ -3,6 +3,7 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const multer = require('multer')
 const uploadConfig = require('./config/upload');
+const path = require('path')
 
 const app = express()
 
@@ -10,6 +11,7 @@ const upload = multer(uploadConfig);
 
 app.use(bodyParser())
 app.use(cors())
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')))
 
 function validate(title, author, description, summary, tags) {
   const errors = []
@@ -55,6 +57,7 @@ const allOpportunities = [
     description:
       'Desenvolvimento de um sistema na arquitetura de microsserviços para estudar os desdobramentos relativos dos padrões',
     tags: ["Iniciação Científica", "Bolsa", "FAPESP", "Sistemas"],
+    image: '',
     },
   {
     id: 2,
@@ -64,6 +67,7 @@ const allOpportunities = [
     description:
       'Estágio 20h/semana, benefícios VR+Odonto, bolsa-auxílio compatível com mercado',
     tags: ["Estágio", "Sistemas"],
+    image: '',
   },
 ]
 
@@ -130,7 +134,7 @@ app.post('/opportunities', upload.single('image') , (req, res) => {
     description,
     summary,
     tags,
-    image: image.filename
+    image: `http://localhost:3000/uploads/${image.filename}`
   }
 
   allOpportunities.push(opportunity)

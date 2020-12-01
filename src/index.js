@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const app = express();
-const { Opportunity } = require('./db');
+const { Opportunity, User } = require('./db');
 
 app.use(bodyParser())
 app.use(cors())
@@ -21,6 +21,11 @@ app.get('/opportunities/tags', async (_req, res) => {
   res.json({
     tags: Object.keys(tags)
   })
+})
+
+app.get('/users', async (_req, res) => {
+  const allUsers = await User.find({})
+  res.json(allUsers)
 })
 
 app.get('/opportunities', async (_req, res) => {
@@ -52,6 +57,47 @@ app.get('/opportunities', async (_req, res) => {
   res.json({
     opportunities: filtered,
   })
+})
+
+app.post('/users', (req,res) => {
+  const { name, email, password} = req.body
+  const user = {
+    name,
+    email,
+    password,
+    opportunities : []
+  }
+  const newUser = new User(user);
+  newUser.save().then((user) => {
+    console.log(user);
+    res.json({ status: 200, user })
+  })
+  .catch((err) => {
+    res.json({ status: 400, message: err });
+  });
+})
+
+app.put('/users/:id', (req,res) => {
+  const { name, email, password} = req.body
+  const user = {
+    name,
+    email,
+    password,
+    opportunities : []
+  }
+  const id = req.params.id;
+  const conditions = {
+    _id : id 
+  }
+
+  User.findOneAndUpdate(conditions,user,function(error,result){
+    if(error){
+      res.json({ status: 400, message: err });
+    }else{
+      console.log(result);
+      res.json( {status: 200, result});
+    }
+  });
 })
 
 app.post('/opportunities', (req, res) => {

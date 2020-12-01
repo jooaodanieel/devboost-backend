@@ -8,8 +8,8 @@ app.use(bodyParser())
 app.use(cors())
 
 app.get('/opportunities/tags', async (_req, res) => {
-  const tags = await Opportunity.find({})
-  tags.reduce((acc, opp) => {
+  const opportunities = await Opportunity.find({})
+  const tags = opportunities.reduce((acc, opp) => {
     opp.tags.forEach((tag) => {
       if (!acc[tag]) {
         acc[tag] = tag;
@@ -17,7 +17,7 @@ app.get('/opportunities/tags', async (_req, res) => {
     })
     return acc;
   }, {})
-
+  
   res.json({
     tags: Object.keys(tags)
   })

@@ -7,7 +7,7 @@ const path = require('path')
 
 const app = express()
 
-const upload = multer(uploadConfig);
+const upload = multer(uploadConfig).single("image");
 
 app.use(bodyParser())
 app.use(cors())
@@ -31,15 +31,8 @@ function validate(title, author, description, summary, tags) {
     errors.push('Empty summary');
   }
 
-  if (!Array.isArray(tags)){
-    errors.push("Tags must be an array");
-  }
-  else{
-    const isString = tags.every((el) => {
-      return typeof(el) === "string";
-    })
-    if (!isString)
-      errors.push("All tags must be strings");
+  if (tags === undefined) {
+    errors.push("Empty tags");
   }
 
   return {
@@ -116,31 +109,32 @@ app.get('/opportunities', (_req, res) => {
   })
 })
 
-app.post('/opportunities', upload.single('image') , (req, res) => {
-  const { title, author, description, summary, tags } = req.body
-  const image = req.file;
-  const { isValid, errors } = validate(title, author, description, summary, tags)
+app.post('/opportunities', (req, res) => {
+    const { title, author, description, summary, tags } = req.body;
+    const { isValid, errors } = validate(title, author, description, summary, tags);
+    const image = req.file;
 
-  if (!isValid) {
-    console.log(errors);
-    res.json({ status: 400, message: errors });
-    return
-  }
+    if (!isValid) {
+      console.log(errors);
+      res.json({ status: 400, message: errors });
+      return
+    }
+    upload(req, res);
 
-  const opportunity = {
-    id: allOpportunities.length + 1,
-    title,
-    author,
-    description,
-    summary,
-    tags,
-    image: `http://localhost:3000/uploads/${image.filename}`
-  }
+    const opportunity = {
+      id: allOpportunities.length + 1,
+      title,
+      author,
+      description,
+      summary,
+      tags: tags.split(",").filter((tag) => tag.trim() !== ""),
+      image: (image !== undefined) ? `http://localhost:3000/uploads/${image.filename}` : ""
+    }
 
-  allOpportunities.push(opportunity)
-  console.log(opportunity)
-  res.json({ status: 200, opportunity })
-})
+    allOpportunities.push(opportunity)
+    console.log(opportunity)
+    res.json({ status: 200, opportunity })
+})  
 
 app.listen(3000, () => {
   console.log('running')

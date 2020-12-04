@@ -2,44 +2,16 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const multer = require('multer')
-const uploadConfig = require('./config/upload');
+const uploadConfig = require('./config/upload')
 const path = require('path')
 
 const app = express()
 
-const upload = multer(uploadConfig).single("image");
+const upload = multer(uploadConfig).single('image')
 
 app.use(bodyParser())
 app.use(cors())
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')))
-
-function validate(title, author, description, summary, tags) {
-  const errors = []
-  if (title === undefined || title.trim() === '') {
-    errors.push('Empty title');
-  }
-
-  if (author === undefined || author.trim() === '') {
-    errors.push('Empty author');
-  }
-
-  if (description === undefined || description.trim() === '') {
-    errors.push('Empty description');
-  }
-
-  if (summary === undefined || summary.trim() === '') {
-    errors.push('Empty summary');
-  }
-
-  if (tags === undefined) {
-    errors.push("Empty tags");
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-  }
-}
 
 const allOpportunities = [
   {
@@ -49,9 +21,9 @@ const allOpportunities = [
     summary: '',
     description:
       'Desenvolvimento de um sistema na arquitetura de microsserviços para estudar os desdobramentos relativos dos padrões',
-    tags: ["Iniciação Científica", "Bolsa", "FAPESP", "Sistemas"],
+    tags: ['Iniciação Científica', 'Bolsa', 'FAPESP', 'Sistemas'],
     image: '',
-    },
+  },
   {
     id: 2,
     title: 'Estágio de desenvolvimento em BluBank',
@@ -59,7 +31,7 @@ const allOpportunities = [
     summary: '',
     description:
       'Estágio 20h/semana, benefícios VR+Odonto, bolsa-auxílio compatível com mercado',
-    tags: ["Estágio", "Sistemas"],
+    tags: ['Estágio', 'Sistemas'],
     image: '',
   },
 ]
@@ -68,14 +40,14 @@ app.get('/opportunities/tags', (_req, res) => {
   const tags = allOpportunities.reduce((acc, opp) => {
     opp.tags.forEach((tag) => {
       if (!acc[tag]) {
-        acc[tag] = tag;
+        acc[tag] = tag
       }
     })
-    return acc;
+    return acc
   }, {})
 
   res.json({
-    tags: Object.keys(tags)
+    tags: Object.keys(tags),
   })
 })
 
@@ -110,31 +82,33 @@ app.get('/opportunities', (_req, res) => {
 })
 
 app.post('/opportunities', (req, res) => {
-    const { title, author, description, summary, tags } = req.body;
-    const { isValid, errors } = validate(title, author, description, summary, tags);
-    const image = req.file;
-
-    if (!isValid) {
-      console.log(errors);
-      res.json({ status: 400, message: errors });
+  upload(req, res, (errors) => {
+    if (errors) {
+      const objErrors = JSON.parse(errors.message)
+      console.log(objErrors)
+      res.json({ status: 400, message: objErrors })
       return
     }
-    upload(req, res);
-
+    const { title, author, description, summary, tags } = req.body
+    const image = req.file
     const opportunity = {
       id: allOpportunities.length + 1,
       title,
       author,
       description,
       summary,
-      tags: tags.split(",").filter((tag) => tag.trim() !== ""),
-      image: (image !== undefined) ? `http://localhost:3000/uploads/${image.filename}` : ""
+      tags: tags.split(',').filter((tag) => tag.trim() !== ''),
+      image:
+        image !== undefined
+          ? `http://localhost:3000/uploads/${image.filename}`
+          : '',
     }
 
     allOpportunities.push(opportunity)
     console.log(opportunity)
     res.json({ status: 200, opportunity })
-})  
+  })
+})
 
 app.listen(3000, () => {
   console.log('running')

@@ -1,6 +1,10 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+
 const app = express();
 const { Opportunity, User } = require('./db');
 
@@ -61,16 +65,44 @@ app.get('/opportunities', async (_req, res) => {
 
 app.post('/users', (req,res) => {
   const { name, email, password} = req.body
-  const user = {
-    name,
-    email,
-    password,
-    opportunities : []
-  }
-  const newUser = new User(user);
-  newUser.save().then((user) => {
+  bcrypt.hash(password, saltRounds).then((hash) => {
+    const user = {
+      name,
+      email,
+      password: hash,
+      opportunities : []
+    }
     console.log(user);
-    res.json({ status: 200, user })
+    const newUser = new User(user);
+    newUser.save().then((user) => {
+      console.log(user);
+      res.json({ status: 200, user })
+    })
+    .catch((err) => {
+      res.json({ status: 400, message: err });
+    });
+    return hash;
+  })
+  .catch((err) => {
+      console.log(err);
+      res.json({ status: 400, message: err });
+      return;
+  });
+})
+
+app.post('/opportunities', (req, res) => {
+  const { title, author, description, summary, tags } = req.body
+  const opportunity = {
+    title,
+    author,
+    description,
+    summary,
+    tags
+  }
+  const newOpportunity = new Opportunity(opportunity);
+  newOpportunity.save().then((opportunity) => {
+    console.log(opportunity);
+    res.json({ status: 200, opportunity })
   })
   .catch((err) => {
     res.json({ status: 400, message: err });
@@ -92,7 +124,7 @@ app.put('/users/:id', (req,res) => {
 
   User.findOneAndUpdate(conditions,user,function(error,result){
     if(error){
-      res.json({ status: 400, message: err });
+      res.json({ status: 400, message: error });
     }else{
       console.log(result);
       res.json( {status: 200, result});
@@ -100,23 +132,13 @@ app.put('/users/:id', (req,res) => {
   });
 })
 
-app.post('/opportunities', (req, res) => {
-  const { title, author, description, summary, tags } = req.body
-  const opportunity = {
-    title,
-    author,
-    description,
-    summary,
-    tags
-  }
-  const newOpportunity = new Opportunity(opportunity);
-  newOpportunity.save().then((opportunity) => {
-    console.log(opportunity);
-    res.json({ status: 200, opportunity })
-  })
-  .catch((err) => {
-    res.json({ status: 400, message: err });
-  });
+app.delete('/users/:id', async (req, res) => {
+  const id = req.params.id;
+  const response = await User.remove({_id: id});
+  if (response.deletedCount > 0)
+    res.json({status: 200, response});
+  else
+    res.json({status: 400, response});
 })
 
 app.listen(3000, () => {

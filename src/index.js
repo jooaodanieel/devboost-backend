@@ -1,70 +1,19 @@
-const express = require('express')
-const bodyParser = require('body-parser')
-const cors = require('cors')
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
 
-const app = express()
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+
+const app = express();
+const { Opportunity, User } = require('./db');
 
 app.use(bodyParser())
 app.use(cors())
 
-function validate(title, author, description, summary, tags) {
-  const errors = []
-  if (title === undefined || title.trim() === '') {
-    errors.push('Empty title');
-  }
-
-  if (author === undefined || author.trim() === '') {
-    errors.push('Empty author');
-  }
-
-  if (description === undefined || description.trim() === '') {
-    errors.push('Empty description');
-  }
-
-  if (summary === undefined || summary.trim() === '') {
-    errors.push('Empty summary');
-  }
-
-  if (!Array.isArray(tags)){
-    errors.push("Tags must be an array");
-  }
-  else{
-    const isString = tags.every((el) => {
-      return typeof(el) === "string";
-    })
-    if (!isString)
-      errors.push("All tags must be strings");
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-  }
-}
-
-const allOpportunities = [
-  {
-    id: 1,
-    title: 'IC em Desenvolvimento de Sistemas',
-    author: 'João Daniel',
-    summary: '',
-    description:
-      'Desenvolvimento de um sistema na arquitetura de microsserviços para estudar os desdobramentos relativos dos padrões',
-    tags: ["Iniciação Científica", "Bolsa", "FAPESP", "Sistemas"],
-    },
-  {
-    id: 2,
-    title: 'Estágio de desenvolvimento em BluBank',
-    author: 'BluBank',
-    summary: '',
-    description:
-      'Estágio 20h/semana, benefícios VR+Odonto, bolsa-auxílio compatível com mercado',
-    tags: ["Estágio", "Sistemas"],
-  },
-]
-
-app.get('/opportunities/tags', (_req, res) => {
-  const tags = allOpportunities.reduce((acc, opp) => {
+app.get('/opportunities/tags', async (_req, res) => {
+  const opportunities = await Opportunity.find({})
+  const tags = opportunities.reduce((acc, opp) => {
     opp.tags.forEach((tag) => {
       if (!acc[tag]) {
         acc[tag] = tag;
@@ -72,24 +21,30 @@ app.get('/opportunities/tags', (_req, res) => {
     })
     return acc;
   }, {})
-
+  
   res.json({
     tags: Object.keys(tags)
   })
 })
 
-app.get('/opportunities', (_req, res) => {
+app.get('/users', async (_req, res) => {
+  const allUsers = await User.find({})
+  res.json(allUsers)
+})
+
+app.get('/opportunities', async (_req, res) => {
   const { title, author, description } = _req.query
   const queryTitleValid = title != undefined && title.trim() != ''
   const queryAuthorValid = author != undefined && author.trim() != ''
   const queryDescriptionValid =
     description != undefined && description.trim() != ''
-
+  
+  const Opportunities = await Opportunity.find({});
   const hasQueries =
     queryAuthorValid || queryDescriptionValid || queryTitleValid
 
   const filtered = hasQueries
-    ? allOpportunities.filter((opportunity) => {
+    ? Opportunities.filter((opportunity) => {
         return (
           (queryTitleValid &&
             opportunity.title.toLowerCase().includes(title.toLowerCase())) ||
@@ -101,35 +56,89 @@ app.get('/opportunities', (_req, res) => {
               .includes(description.toLowerCase()))
         )
       })
-    : allOpportunities
+    : Opportunities
 
   res.json({
     opportunities: filtered,
   })
 })
 
+app.post('/users', (req,res) => {
+  const { name, email, password} = req.body
+  bcrypt.hash(password, saltRounds).then((hash) => {
+    const user = {
+      name,
+      email,
+      password: hash,
+      opportunities : []
+    }
+    console.log(user);
+    const newUser = new User(user);
+    newUser.save().then((user) => {
+      console.log(user);
+      res.json({ status: 200, user })
+    })
+    .catch((err) => {
+      res.json({ status: 400, message: err });
+    });
+    return hash;
+  })
+  .catch((err) => {
+      console.log(err);
+      res.json({ status: 400, message: err });
+      return;
+  });
+})
+
 app.post('/opportunities', (req, res) => {
   const { title, author, description, summary, tags } = req.body
-  const { isValid, errors } = validate(title, author, description, summary, tags)
-
-  if (!isValid) {
-    console.log(errors);
-    res.json({ status: 400, message: errors });
-    return
-  }
-
   const opportunity = {
-    id: allOpportunities.length + 1,
     title,
     author,
     description,
     summary,
     tags
   }
+  const newOpportunity = new Opportunity(opportunity);
+  newOpportunity.save().then((opportunity) => {
+    console.log(opportunity);
+    res.json({ status: 200, opportunity })
+  })
+  .catch((err) => {
+    res.json({ status: 400, message: err });
+  });
+})
 
-  allOpportunities.push(opportunity)
-  console.log(opportunity)
-  res.json({ status: 200, opportunity })
+app.put('/users/:id', (req,res) => {
+  const { name, email, password} = req.body
+  const user = {
+    name,
+    email,
+    password,
+    opportunities : []
+  }
+  const id = req.params.id;
+  const conditions = {
+    _id : id 
+  }
+
+  User.findOneAndUpdate(conditions,user,function(error,result){
+    if(error){
+      res.json({ status: 400, message: error });
+    }else{
+      console.log(result);
+      res.json( {status: 200, result});
+    }
+  });
+})
+
+app.delete('/users/:id', async (req, res) => {
+  const id = req.params.id;
+  const response = await User.remove({_id: id});
+  if (response.deletedCount > 0)
+    res.json({status: 200, response});
+  else
+    res.json({status: 400, response});
 })
 
 app.listen(3000, () => {

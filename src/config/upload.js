@@ -1,4 +1,3 @@
-const { error } = require('console')
 const multer = require('multer')
 const path = require('path')
 const validator = require('../validation')

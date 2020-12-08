@@ -5,7 +5,7 @@ const path = require('path')
 
 const app = express()
 
-const OpportunityController = require('./opportunities_controller.js')
+const OpportunityController = require('./opportunities_controller')
 
 app.use(bodyParser())
 app.use(cors())
